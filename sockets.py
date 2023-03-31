@@ -92,11 +92,17 @@ def read_ws(ws):
     try:
         while True:
             msg = ws.receive()
-            print("Recieved:" + msg)
+            if msg :
+                print("Recieved:" + msg)
             #Permit falsy values
             if msg is not None :
-               packet = json.loads(msg)
-               send_all_json(packet)
+                packet = json.loads(msg)
+                #Notify everyone
+                send_all_json(packet)
+                #Update world
+                for entity, data in packet.items() :
+                    myWorld.set(entity, data)
+
     except Exception as oopsie:
         print(oopsie)
 
@@ -112,7 +118,8 @@ def subscribe_socket(ws):
     try:
         while True:
             msg = client.get()
-            print("Got:" + msg)
+            if msg:
+                print("Got:" + msg)
             ws.send(msg)
     except Exception as oopsie:
         print("Websocket Error: " + str(oopsie))
@@ -136,12 +143,11 @@ def flask_post_json():
 def update(entity):
     '''update the entities via this interface'''
     
-    print('Update recieved!')
     jsonRequest = flask_post_json()
     for (key, value) in jsonRequest.items():
         myWorld.update(entity, key, value)
     #Send back the updated entity
-    return flask.jsonify(myWorld.get(entity))
+    return myWorld.get(entity)
 
 @app.route("/world", methods=['POST','GET'])    
 def world():

@@ -35,7 +35,6 @@ var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
 var wscounter = 0;
 var socket; //Declare globally so all functions can access
-var baseURL = `ws://${host}`
 
 function debug(str) {
     var debugDiv = document.getElementById('debug');
@@ -122,13 +121,18 @@ function getPosition(e) {
 	}
 }
 
+function sendRequest(method, endpoint, data = null) {
+    xhr = new XMLHttpRequest;
+    xhr.open(method, endpoint);
+    xhr.send(data)
+}
+
 function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
 
     //XXX: Send a XHTML Request that updates the entity you just modified!
-    const package = {entity: data}
-    const url = `${baseURL}/entity/${entity}`
+    const package = {[entity]: data}
     socket.send(JSON.stringify(package))
 }
 var counter = 0;
@@ -254,12 +258,22 @@ function update() {
 }
 
 function wsSetup() {
-    const url = `${baseURL}/subscribe`;
+    const url = `ws://${host}/subscribe`;
     socket = new WebSocket(url);
     socket.onopen = function() {
         //Get the initial state of the world
+        fetch('/world')
+        .then((res) => {
+            const wsWorld = res.json()
+        })
+        .then((wsWorld) => {
+            for (const entity in wsWorld) {
+                world[entity] = wsWorld[entity]
+            }
+            drawNextFrame();
+        })
+
         wscounter++
-        drawNextFrame()
         debug("Open")
     };
     socket.onerror = function(msg) {
@@ -270,11 +284,11 @@ function wsSetup() {
         try {
             debug("WebSocket Recv:" + msg.data);
             //Recieved packet, parse data and draw the entity (message)
-            const wsWorld = JSON.parse(msg)
-            alert(wsWorld)
-            for (const entity of wsWorld) {
-             world[entity] = wsWorld[entity]
-            } 
+            const wsWorld = JSON.parse(msg.data)
+            for (const entity in wsWorld) {
+                world[entity] = wsWorld[entity]
+            }
+            drawNextFrame(); 
         } catch (e) {
             console.table(msg)
             alert("socket on message: " + e);
