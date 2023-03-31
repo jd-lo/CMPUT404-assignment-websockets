@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 import flask
-from flask import Flask, request
+from flask import Flask, request, redirect
 from flask_sockets import Sockets
 import gevent
 from gevent import queue
@@ -81,7 +81,7 @@ myWorld.add_set_listener( set_listener )
 @app.route('/')
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    return redirect("/static/index.html", code=301)
 
 def send_all_json(obj):
     for client in clients:
@@ -108,13 +108,14 @@ def subscribe_socket(ws):
     client = Client()
     clients.append(client)
     g = gevent.spawn(read_ws, ws)
+    # print("Subscribing")
     try:
         while True:
             msg = client.get()
             print("Got:" + msg)
             ws.send(msg)
     except Exception as oopsie:
-        print("Websocket Error: " + oopsie)
+        print("Websocket Error: " + str(oopsie))
     finally:
         clients.remove(client)
         gevent.kill(g)
@@ -134,23 +135,28 @@ def flask_post_json():
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    return None
+    
+    jsonRequest = flask_post_json()
+    myWorld.update(entity, jsonRequest)
+    #Send back the updated entity
+    return flask.json(world.get(entity))
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return None
+    return flask.jsonify(myWorld.world())
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    return flask.jsonify(world.get(entity))
 
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
-    return None
+    myWorld.clear()
+    return flask.jsonify(myWorld.world())
 
 
 
