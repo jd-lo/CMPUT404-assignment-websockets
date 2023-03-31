@@ -27,7 +27,7 @@ sockets = Sockets(app)
 app.debug = True
 clients = []
 
-#broadcast.py
+#https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/broadcaster.py
 class Client:
     def __init__(self):
         self.queue = queue.Queue() #From gevent
@@ -87,6 +87,7 @@ def send_all_json(obj):
     for client in clients:
         client.put(json.dumps(obj))
 
+#https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/broadcaster.py
 def read_ws(ws):
     '''A greenlet function that reads from the websocket and updates the world'''
     try:
@@ -106,6 +107,7 @@ def read_ws(ws):
     except Exception as oopsie:
         print(oopsie)
 
+#https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/broadcaster.py
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
     '''Fufill the websocket URL of /subscribe, every update notify the

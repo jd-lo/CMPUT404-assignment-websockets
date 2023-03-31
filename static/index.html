@@ -45,10 +45,11 @@ debug("Test");
 world = {}; //Why is this undefined in the functions?
 
 //XXX: TODO Make this prettier!
+//https://github.com/jd-lo/CMPUT404-assignment-ajax/blob/master/static/index.html
 function drawCircle(context,entity) {
     with(context) {
         beginPath();                
-        lineWidth = 3;
+        lineWidth = 1;
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
@@ -64,7 +65,7 @@ function prepEntity(entity) {
         entity["colour"] = "#FF0000";
     }
     if (!entity["radius"]) {
-        entity["radius"] = 50;
+        entity["radius"] = 15;
     }
     return entity;
 }
@@ -72,7 +73,7 @@ function prepEntity(entity) {
 function clearFrame() {
     with(context) {
 	moveTo(0,0);
-	fillStyle = "#000";
+	fillStyle = "#111";
 	fillRect(0,0,W,H);
     }
 
@@ -119,12 +120,6 @@ function getPosition(e) {
 		var y = e.pageY  - canvas.offsetTop;
 		return [x,y];
 	}
-}
-
-function sendRequest(method, endpoint, data = null) {
-    xhr = new XMLHttpRequest;
-    xhr.open(method, endpoint);
-    xhr.send(data)
 }
 
 function addEntity(entity, data) {
@@ -239,17 +234,18 @@ mouse = (function() {
 
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
+//https://github.com/jd-lo/CMPUT404-assignment-ajax/blob/master/static/index.html
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'rgba(245, 243, 127, 0.5)'});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'rgba(28, 133, 237, 0.5)'});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    addEntityWithoutName({'x':x,'y':y,'colour':'rgb(125, 255, 196)',
+                          'radius':5});
 });
 
 
@@ -260,6 +256,7 @@ function update() {
 function wsSetup() {
     const url = `ws://${host}/subscribe`;
     socket = new WebSocket(url);
+    //https://developer.mozilla.org/en-US/docs/Web/API/Response/json
     socket.onopen = function() {
         //Get the initial state of the world
         fetch('/world')
