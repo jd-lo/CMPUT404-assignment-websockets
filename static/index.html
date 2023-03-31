@@ -263,16 +263,15 @@ function wsSetup() {
     socket.onopen = function() {
         //Get the initial state of the world
         fetch('/world')
-        .then((res) => {
-            const wsWorld = res.json()
-        })
-        .then((wsWorld) => {
+        .then(response => response.json())
+        .then(data => {
+            const wsWorld = data;
             for (const entity in wsWorld) {
-                world[entity] = wsWorld[entity]
+                world[entity] = wsWorld[entity];
             }
-            drawNextFrame();
-        })
-
+            console.log(data)
+            renderFrame();
+        });
         wscounter++
         debug("Open")
     };
