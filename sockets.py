@@ -25,6 +25,18 @@ import os
 app = Flask(__name__)
 sockets = Sockets(app)
 app.debug = True
+clients = []
+
+#broadcast.py
+class Client:
+    def __init__(self):
+        self.queue = queue.Queue() #From gevent
+
+    def put(self, val):
+        self.queue.put_nowait(val) #Also a greenlet method
+
+    def get(self):
+        return self.queue.get()
 
 class World:
     def __init__(self):
@@ -71,18 +83,41 @@ def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
     return None
 
-def read_ws(ws,client):
+def send_all_json(obj):
+    for client in clients:
+        client.put(json.dumps(obj))
+
+def read_ws(ws):
     '''A greenlet function that reads from the websocket and updates the world'''
-    # XXX: TODO IMPLEMENT ME
-    return None
+    try:
+        while True:
+            msg = ws.receive()
+            print("Recieved:" + msg)
+            #Permit falsy values
+            if msg is not None :
+               packet = json.loads(msg)
+               send_all_json(packet)
+    except Exception as oopsie:
+        print(oopsie)
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
     '''Fufill the websocket URL of /subscribe, every update notify the
        websocket and read updates from the websocket '''
-    # XXX: TODO IMPLEMENT ME
-    return None
-
+    #broadcaster.py
+    client = Client()
+    clients.append(client)
+    g = gevent.spawn(read_ws, ws)
+    try:
+        while True:
+            msg = client.get()
+            print("Got:" + msg)
+            ws.send(msg)
+    except Exception as oopsie:
+        print("Websocket Error: " + oopsie)
+    finally:
+        clients.remove(client)
+        gevent.kill(g)
 
 # I give this to you, this is how you get the raw body/data portion of a post in flask
 # this should come with flask but whatever, it's not my project.
